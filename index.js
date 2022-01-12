@@ -1,6 +1,7 @@
 const express = require('express')
 const app = express()
 const cors = require('cors')
+const fileUpload = require('express-fileupload')
 const { MongoClient } = require('mongodb');
 const objectId = require('mongodb').ObjectId
 require('dotenv').config();
@@ -34,8 +35,19 @@ async function run() {
 
         // ADD PRODUCT
         app.post('/dashboard/addProduct', async (req, res) => {
-            const productDetail = req.body
-            // console.log('hitting add product', req.body);
+            const title = req.body.title
+            const price = req.body.price
+            const description = req.body.description
+            const pic = req.files.url
+            const picData = pic.data
+            const encodedPic = picData.toString('base64')
+            const imageBuffer = Buffer.from(encodedPic, 'base64')
+            const productDetail = {
+                title,
+                price,
+                description,
+                url: imageBuffer
+            }
             const result = await bicycleProductsCollection.insertOne(productDetail)
             res.json(result)
 
@@ -186,6 +198,7 @@ run().catch(console.dir);
 // MIDDLEWARE
 app.use(cors())
 app.use(express.json())
+app.use(fileUpload())
 
 app.get('/', (req, res) => {
     res.send('Hello World!')
